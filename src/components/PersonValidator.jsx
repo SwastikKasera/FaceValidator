@@ -61,13 +61,13 @@ const PersonValidator = () => {
         const poses = await net.estimateMultiplePoses(video, {
           flipHorizontal: true,
         });
-
+    
         console.log(poses);
-
+    
         setNumPeople(poses.length);
-
+    
         drawDots(poses);
-
+    
         // For simplicity, check if there is more than one person and set position accordingly
         if (poses.length > 1) {
           setPosition("Multiple People");
@@ -75,17 +75,23 @@ const PersonValidator = () => {
           const pose = poses[0];
           const eyeLeft = pose.keypoints.find((point) => point.part === 'leftEye');
           const eyeRight = pose.keypoints.find((point) => point.part === 'rightEye');
-
-          if (eyeLeft && eyeRight) {
-            const eyeMidpointX = (eyeLeft.position.x + eyeRight.position.x) / 2;
-            const cameraMidpointX = video.width / 2;
-
-            const threshold = 100;
-
-            if (eyeMidpointX < cameraMidpointX - threshold) {
-              setPosition("Left");
-            } else if (eyeMidpointX > cameraMidpointX + threshold) {
-              setPosition("Right");
+    
+          // Define the missing variables
+          const eyeMidpointX = (eyeLeft.position.x + eyeRight.position.x) / 2;
+          const cameraMidpointX = video.width / 2;
+          const threshold = 100; // You can adjust this threshold value
+    
+          if (eyeMidpointX < cameraMidpointX - threshold) {
+            setPosition("Left");
+          } else if (eyeMidpointX > cameraMidpointX + threshold) {
+            setPosition("Right");
+          } else {
+            // Adjust the threshold for facing front
+            const frontThreshold = 50;
+            const eyeDistance = Math.abs(eyeLeft.position.x - eyeRight.position.x);
+    
+            if (eyeDistance < frontThreshold) {
+              setPosition("Not Directly Facing");
             } else {
               setPosition("Front");
               navigate('/home')
@@ -94,6 +100,7 @@ const PersonValidator = () => {
         }
       }
     };
+    
 
     loadPosenet();
   }, []);
